@@ -112,14 +112,20 @@ export default function (pi: ExtensionAPI) {
         if (targets.length === 0) {
           // Potentially mutating but no clear file target — ask the user
           if (config.interactiveConfirmOutside && ctx.hasUI) {
-            const result = await confirmBoundaryViolation(
-              ctx, "bash", `command: ${command.split(/&&|;|\|\|/)[0].trim().slice(0, 80)}...`, projectRoot, memory, config.memoryEnabled,
+            const shortCmd = command.split(/&&|;|\|\|/)[0].trim().slice(0, 80);
+            const choice = await ctx.ui.select(
+              `🤔 Unclear Command
+
+Command: ${shortCmd}...
+
+The security gate can't determine which files this command would touch.
+Allow it to run?`,
+              ["Allow this once", "Block"],
             );
-            if (result.action === "block") {
-              return { block: true, reason: "Security gate: potentially mutating command blocked" };
+            if (choice === "Allow this once") {
+              return;
             }
-            saveMem();
-            return;
+            return { block: true, reason: "Security gate: unclear command blocked" };
           }
           return {
             block: true,

@@ -12,7 +12,13 @@ const SAFE_COMMANDS = new Set([
 ]);
 
 const SAFE_GIT_SUBS = new Set([
+  // Read-only
   "log", "diff", "show", "status", "branch", "tag", "remote", "blame", "grep",
+  // Operates within .git/ (project-internal)
+  "add", "commit", "mv", "rm", "stash", "checkout", "merge", "cherry-pick",
+  "revert", "am", "apply", "bisect", "notes", "reflog",
+  // Reset/restore work within the project
+  "reset", "restore", "switch",
 ]);
 
 const SAFE_PKG_MGRS = new Set([
