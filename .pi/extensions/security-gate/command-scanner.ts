@@ -8,7 +8,7 @@ const SAFE_COMMANDS = new Set([
   "file", "stat", "sort", "uniq", "cut", "tr", "awk", "echo", "printf",
   "which", "type", "whereis", "ps", "top", "htop", "free", "uptime",
   "uname", "hostname", "pwd", "env", "printenv", "diff", "cmp", "comm",
-  "man", "info", "hl",
+  "man", "info", "hl", "cd", "true", "false", "test", "[",
 ]);
 
 const SAFE_GIT_SUBS = new Set([
@@ -23,15 +23,37 @@ const SAFE_PKG_SUBS = new Set([
   "check", "ls", "list", "show", "test", "lint", "typecheck",
 ]);
 
-export function classifyBaseCommand(command: string): CommandClassification {
+/**
+ * Classify a single command segment (no chaining operators).
+ */
+function classifySegment(command: string): CommandClassification {
   const parts = command.trim().split(/\s+/);
   if (parts.length === 0) return "potentially-mutating";
   let base = parts[0];
   if (base.includes("/")) base = base.split("/").pop()!;
 
+  // Shell builtins that don't modify files
+  if (base === "cd" || base === "true" || base === "false" || base === "test" || base === "[") {
+    return "safe";
+  }
+
   if (SAFE_COMMANDS.has(base)) return "safe";
   if (base === "git") {
-    const sub = parts[1];
+    // Skip flags that take a value (-C, -c, --git-dir, --work-tree) to find the subcommand
+    let subIdx = 1;
+    while (subIdx < parts.length) {
+      const p = parts[subIdx];
+      if (p === "-C" || p === "-c" || p === "--git-dir" || p === "--work-tree") {
+        subIdx += 2; // skip flag + value
+      } else if (p.startsWith("-c")) {
+        subIdx += 1; // skip -c=value
+      } else if (p.startsWith("-")) {
+        subIdx += 1; // skip bare flag
+      } else {
+        break;
+      }
+    }
+    const sub = parts[subIdx];
     if (sub && SAFE_GIT_SUBS.has(sub)) return "safe";
     return "potentially-mutating";
   }
@@ -41,13 +63,29 @@ export function classifyBaseCommand(command: string): CommandClassification {
     if (parts[1]?.startsWith("--version") || parts[1] === "-v") return "safe";
     return "potentially-mutating";
   }
-
-  // Heuristic: if first arg is --version, -v, --help, -h, it's likely safe inspection
   if (parts[1] === "--version" || parts[1] === "-v" || parts[1] === "--help" || parts[1] === "-h") {
     return "safe";
   }
-
   return "potentially-mutating";
+}
+
+/**
+ * Classify a full command line, handling chained commands (&& || ; |).
+ * Returns "safe" only if ALL segments are safe.
+ */
+export function classifyBaseCommand(command: string): CommandClassification {
+  // Split on chaining operators: &&, ||, ; (but not | which is piped to the same logical operation)
+  // Also handle newlines as command separators
+  const segments = command.split(/&&|\|\||;/);
+
+  for (const segment of segments) {
+    const trimmed = segment.trim();
+    if (!trimmed) continue;
+    const classification = classifySegment(trimmed);
+    if (classification === "potentially-mutating") return "potentially-mutating";
+  }
+
+  return "safe";
 }
 
 // ---- PATH EXTRACTION ----

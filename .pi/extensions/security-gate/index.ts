@@ -110,6 +110,17 @@ export default function (pi: ExtensionAPI) {
 
         const targets = extractTargetPaths(command, projectRoot);
         if (targets.length === 0) {
+          // Potentially mutating but no clear file target — ask the user
+          if (config.interactiveConfirmOutside && ctx.hasUI) {
+            const result = await confirmBoundaryViolation(
+              ctx, "bash", `command: ${command.split(/&&|;|\|\|/)[0].trim().slice(0, 80)}...`, projectRoot, memory, config.memoryEnabled,
+            );
+            if (result.action === "block") {
+              return { block: true, reason: "Security gate: potentially mutating command blocked" };
+            }
+            saveMem();
+            return;
+          }
           return {
             block: true,
             reason: "Security gate: potentially mutating command with no clear file target",
