@@ -33,6 +33,34 @@ Blocks file modifications **outside the project directory**:
 
 When you approve or deny an operation, you can choose **"and remember"** — stored to `.pi/*-memory.json` in the project root. Survives `/new`, `/reload`, and fresh launches.
 
+## Defaults — what happens when you just type `pi`
+
+After installing, both extensions auto-load on every `pi` launch. Here's what you get **without any flags**:
+
+| Extension | Default | What it does |
+|-----------|---------|-------------|
+| **Permissions Gate** | `standard` tier, active | Confirms dangerous operations before they run. You'll see a dialog for `rm -rf`, `sudo`, `chmod 777`, destructive git, piped curl-to-shell, and writes to system paths (`/etc`, `/usr`, etc.). Regular file edits and safe commands pass through freely. |
+| **Security Gate** | **inactive** (off) | Requires `--security-gate` flag or `enabled: true` in `.pi/security-gate.json` to activate. When off, the agent can write anywhere. |
+| **Force-flag check** | Active | Even at `open` tier, any `-f`/`--force`/`-rf` flag triggers a confirmation dialog. You can disable this per-project via `forceFlagRequiresConfirm: false` in config. |
+| **Memory** | Active | Approvals and denials you "remember" persist to `.pi/` and survive restarts. |
+
+### Quick-start: what you'll see
+
+```bash
+pi                          # Permissions gate at standard tier, security gate off
+                            # Agent blocked from rm -rf, sudo, etc.
+                            # File writes allowed normally
+
+pi --security-gate          # Standard permissions + boundary protection
+                            # Agent can't write outside the project
+
+pi --permissions-gate=open  # No restrictions except force-flag checks
+                            # Security gate still off
+
+pi --no-permissions-gate    # Permissions gate disabled entirely
+                            # (security gate loads but stays off by default)
+```
+
 ## Install
 
 ```bash
