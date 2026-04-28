@@ -22,11 +22,11 @@ const SAFE_GIT_SUBS = new Set([
 ]);
 
 const SAFE_PKG_MGRS = new Set([
-  "cargo", "npm", "npx", "pip", "gem", "node",
+  "cargo", "npm", "npx", "pip", "gem", "node", "flutter", "dart",
 ]);
 
 const SAFE_PKG_SUBS = new Set([
-  "check", "ls", "list", "show", "test", "lint", "typecheck",
+  "check", "ls", "list", "show", "test", "lint", "typecheck", "analyze",
 ]);
 
 /**
@@ -98,7 +98,8 @@ export function classifyBaseCommand(command: string): CommandClassification {
 
 function extractRedirectPaths(command: string): string[] {
   const paths: string[] = [];
-  const redirectRegex = /\d*>>?\s*(\S+)/g;
+  // Match file redirects: >file, >>file, 2>file, but NOT 2>&1 (file descriptor dup)
+  const redirectRegex = /\d*>>?(?!&)\s*(\S+)/g;
   let match: RegExpExecArray | null;
   while ((match = redirectRegex.exec(command)) !== null) {
     const target = match[1];
