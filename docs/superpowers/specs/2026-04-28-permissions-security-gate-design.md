@@ -177,7 +177,7 @@ for site-specific overrides.
 | `--permissions-gate=<level>` | Set tier on launch |
 | `--no-permissions-gate` | Disable entirely (extension not loaded) |
 | `/permissions` | Show current level, config, memory stats |
-| `/permissions-set <level>` | Change tier interactively |
+| `/permissions set <level>` | Change tier interactively |
 | `/permissions memory` | List all remembered entries |
 | `/permissions forget <index>` | Remove a remembered entry |
 | `/permissions clear-memory` | Reset all memory |
@@ -497,7 +497,7 @@ export interface ClassificationResult {
 
 export function classifyBashCommand(command: string, cwd: string): ClassificationResult;
 export function fingerprintCommand(command: string): string;
-export function isAllowedAtTier(fingerprint: string, tier: PermissionLevel, config: PermissionsConfig): boolean;
+export function isAllowedAtTier(fingerprint: string, tier: PermissionLevel, config: PermissionsConfig): { allowed: boolean; reason?: string };
 export function isAlwaysAllowed(fingerprint: string, config: PermissionsConfig): boolean;
 export function isAlwaysDenied(fingerprint: string, config: PermissionsConfig): boolean;
 export function isReadOnlyAllowed(command: string): boolean;
