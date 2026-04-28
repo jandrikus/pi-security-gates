@@ -1,0 +1,15 @@
+{
+  "name": "pi-security-gates",
+  "version": "1.0.0",
+  "description": "Tiered permissions gate and project-boundary security gate extensions for the Pi coding agent harness",
+  "keywords": ["pi-package", "pi", "security", "permissions", "gate"],
+  "license": "MIT",
+  "peerDependencies": {
+    "@mariozechner/pi-coding-agent": "*",
+    "@mariozechner/pi-ai": "*",
+    "typebox": "*"
+  },
+  "pi": {
+    "extensions": ["./extensions"]
+  }
+}
