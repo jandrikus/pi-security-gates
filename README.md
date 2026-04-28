@@ -139,4 +139,4 @@ Global fallbacks at `~/.pi/agent/extensions/permissions-gate.json` and `~/.pi/ag
 
 ## License
 
-MIT
+Apache-2.0
